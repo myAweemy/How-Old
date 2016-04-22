@@ -1,5 +1,8 @@
 package com.example.how_old;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.sql.PreparedStatement;
 
 import org.json.JSONArray;
@@ -9,6 +12,7 @@ import org.json.JSONObject;
 import com.facepp.error.FaceppParseException;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -16,13 +20,18 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Typeface;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -30,33 +39,64 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 public class MainActivity extends Activity implements OnClickListener {
 
-	private static final int PICK_CODE = 0x110;
+	private static final int PICK_CODE = 999;
+	private static final int TAKEPHOTO_CODE = 666;
 	private Button btn_get;
 	private Button btn_detect;
+	private Button btn_takephoto;
+	private Button btn_more;
 	private TextView tv_tip;
 	private ImageView mphoto;
-	private View mwaiting;
+	private View mWaitingbar;
 	private String mCurrentPhotoStr;
 	private Bitmap mPhotoImg;
 	private Paint mpaint;
+	private Uri imageUri;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         
+        if(!isNetworkAvailable(getBaseContext())){
+        	Toast toast = Toast.makeText(getBaseContext(), "请打开移动网络或wifi", Toast.LENGTH_LONG);
+        	toast.setGravity(Gravity.CENTER, 0, 0);
+        	toast.show();
+        }
         initViews();
         initEvent();
         mpaint = new Paint();
+        mpaint.setTypeface(Typeface.SANS_SERIF);
     }
+   
+    	public static boolean isNetworkAvailable(Context context) {
+    		ConnectivityManager connectivity = (ConnectivityManager) context
+    				.getSystemService(Context.CONNECTIVITY_SERVICE);
+    		if (connectivity == null) {
+    			return false;
+    		} else {
+    			NetworkInfo[] info = connectivity.getAllNetworkInfo();
+    			if (info != null) {
+    				for (int i = 0; i < info.length; i++) {
+    					if (info[i].isConnected()) {
+    						return true;
+    					}
+    				}
+    			}
+    		}
+    		return false;
+    	}
 
 
-    private void initEvent() {
+	private void initEvent() {
     	btn_get.setOnClickListener(this);
     	btn_detect.setOnClickListener(this);
+    	btn_takephoto.setOnClickListener(this);
+    	btn_more.setOnClickListener(this);
 	}
 
 
@@ -64,12 +104,12 @@ public class MainActivity extends Activity implements OnClickListener {
 		
 		btn_get = (Button)findViewById(R.id.btn_get);
 		btn_detect = (Button)findViewById(R.id.btn_detect);
+		btn_takephoto = (Button) findViewById(R.id.btn_takephoto);
+		btn_more = (Button) findViewById(R.id.btn_more);
 		tv_tip = (TextView)findViewById(R.id.tv_tip);
 		mphoto = (ImageView)findViewById(R.id.photo);
-		mwaiting = findViewById(R.id.waiting);
+		mWaitingbar = findViewById(R.id.waiting);
 	}
-
-
 
     private static final int msg_success = 0x111;
     private static final int msg_error = 0x112;
@@ -78,19 +118,19 @@ public class MainActivity extends Activity implements OnClickListener {
     		super.handleMessage(msg);
     		switch (msg.what) {
 			case msg_success:
-				mwaiting.setVisibility(View.GONE);
+				mWaitingbar.setVisibility(View.GONE);
 				JSONObject rs = (JSONObject) msg.obj;
 				PrepareRsBitmap(rs);
 				mphoto.setImageBitmap(mPhotoImg);
 				break;
 			case msg_error:
-				mwaiting.setVisibility(View.GONE);
+				mWaitingbar.setVisibility(View.GONE);
 				String errormsg = (String) msg.obj;
 				if(TextUtils.isEmpty(errormsg)){
-					tv_tip.setText("error");
+					tv_tip.setText("臣妾识别不出来啊");
 				}
 				else{
-					tv_tip.setText(errormsg);
+					tv_tip.setText("臣妾大脑突然凌乱了...");
 				}
 				break;
 			default:
@@ -102,17 +142,33 @@ public class MainActivity extends Activity implements OnClickListener {
 	@Override
 	public void onClick(View v) {
 		switch(v.getId()){
+		case R.id.btn_more:
+			Intent moreintent = new Intent(MainActivity.this,AboutActivity.class);
+			startActivity(moreintent);
+			overridePendingTransition(R.anim.main_to_left, R.anim.welcome_to_left);
+			break;
+			
 		case R.id.btn_get: 
 			Intent intent = new Intent(Intent.ACTION_PICK);
 			intent.setType("image/*");
 			startActivityForResult(intent, PICK_CODE);
 			break;
+		////////////////////////////////	
+		case R.id.btn_takephoto:			
+				// TODO Auto-generated method stub
+				Intent tpintent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+				startActivityForResult(tpintent, TAKEPHOTO_CODE);
+				break;
 			
+		/////////////////////////////////	
 		case R.id.btn_detect:
-			mwaiting.setVisibility(View.VISIBLE);
+			mWaitingbar.setVisibility(View.VISIBLE);
 			
 			if(mCurrentPhotoStr != null && !mCurrentPhotoStr.trim().equals("")){
-				resizePhoto();
+				if(mCurrentPhotoStr.equals("takingphoto")) {					
+				}else {
+					resizePhoto();
+				}
 			}else{
 				mPhotoImg = BitmapFactory.decodeResource(getResources(), R.drawable.test);
 			}
@@ -136,8 +192,7 @@ public class MainActivity extends Activity implements OnClickListener {
 				}
 			});
 			break;
-		}
-		
+		}		
 	}
 
 
@@ -149,10 +204,13 @@ public class MainActivity extends Activity implements OnClickListener {
 		try {
 			JSONArray faces = rs.getJSONArray("face");
 			
-			int facecount = faces.length();
-			
-			tv_tip.setText("face"+facecount);
-			for(int i=0;i <= facecount;i++){
+			int countofFaces = faces.length();
+			if(countofFaces == 0){
+				tv_tip.setText("主人，我没有找到脸，求虐...");
+			}else{
+				tv_tip.setText("主人，我找到了"+countofFaces+"张脸");
+			}
+			for(int i=0;i <= countofFaces;i++){
 				JSONObject face = faces.getJSONObject(i);
 
 				JSONObject posobj = face.getJSONObject("position");
@@ -174,9 +232,13 @@ public class MainActivity extends Activity implements OnClickListener {
 				canvas.drawLine(x+w/2, y-h/2, x+w/2, y+h/2, mpaint);
 				canvas.drawLine(x-w/2, y+h/2, x+w/2, y+h/2, mpaint);
 				int age = face.getJSONObject("attribute").getJSONObject("age").getInt("value");
+				int range = face.getJSONObject("attribute").getJSONObject("age").getInt("range");
+				float smilingvalue = (float) face.getJSONObject("attribute").getJSONObject("smiling").getDouble("value");
+				Log.e("TAG",smilingvalue+"");
+				range = range / 2;
+				age += range;
 				String gander = face.getJSONObject("attribute").getJSONObject("gender").getString("value");
-				
-				Bitmap ageBitmap = buildAgeBitmap(age,"Male".equals(gander));
+				Bitmap ageBitmap = buildAgeBitmap(age,smilingvalue,countofFaces,"Male".equals(gander));
 				int ageWidth = ageBitmap.getWidth();
 				int ageHeight = ageBitmap.getHeight();
 				
@@ -195,18 +257,37 @@ public class MainActivity extends Activity implements OnClickListener {
 	}
 
 
-	private Bitmap buildAgeBitmap(int age, boolean isMale) {
-		TextView tv = (TextView) mwaiting.findViewById(R.id.id_age_and_gender);
-		tv.setText(age+""+"  ");
+	private Bitmap buildAgeBitmap(int age,float smilingvalue,int countofFaces, boolean isMale) {
+		TextView tv = (TextView) mWaitingbar.findViewById(R.id.id_age_and_gender);
+		String strage = age+"";
+		String male = "♂ ";
+		String female = "♀ ";
+		String smiling = " ^_^";
 		if(isMale){
-			tv.setCompoundDrawablesWithIntrinsicBounds(getResources().getDrawable(R.drawable.male), null, null, null);
+			//tv.setCompoundDrawablesWithIntrinsicBounds(getResources().getDrawable(R.drawable.male), null, null, null);
+			
+				if(smilingvalue > 50){
+				tv.setText(male+strage+ smiling);
+				if(countofFaces == 1 && age <= 21){tv_tip.setText("I find a smiling boy");}
+				}else{tv.setText(male+strage);}
 		}else{
-			tv.setCompoundDrawablesWithIntrinsicBounds(getResources().getDrawable(R.drawable.female), null, null, null);
+			//tv.setCompoundDrawablesWithIntrinsicBounds(getResources().getDrawable(R.drawable.female), null, null, null);			
+				if(smilingvalue > 50){
+					tv.setText(female+strage+ smiling);
+					tv.invalidate();
+					if(countofFaces == 1 && age <= 21){
+						tv_tip.setText("I find a smiling girl");
+						tv.invalidate();
+					}
+				}else{tv.setText(female+strage);
+					tv.invalidate();
+				}	
+				
 		}
+		tv.invalidate();
 		tv.setDrawingCacheEnabled(true);
 		Bitmap bitmap = Bitmap.createBitmap(tv.getDrawingCache());
 		tv.destroyDrawingCache();
-		
 		return bitmap;
 	}
 
@@ -222,15 +303,26 @@ public class MainActivity extends Activity implements OnClickListener {
 				
 				int idx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
 				mCurrentPhotoStr = cursor.getString(idx);
-				cursor.close();
-				
+				cursor.close();				
 				resizePhoto();
 				mphoto.setImageBitmap(mPhotoImg);
-
+				
 			}
 		}
-	}
-
+		//拍照
+		if(requestCode == TAKEPHOTO_CODE){
+			if(resultCode == RESULT_OK){ //判断返回结果，在相机界面按返回键程序会崩溃
+				Bitmap bmPhoto = (Bitmap) intent.getExtras().get("data");  
+				mCurrentPhotoStr = "takingphoto";
+				mPhotoImg = bmPhoto;
+				mphoto.setImageBitmap(mPhotoImg);
+				tv_tip.setText("");
+			}else{
+				
+			}
+			
+		}
+	}		
 
 	private void resizePhoto() {
 		BitmapFactory.Options options = new BitmapFactory.Options();

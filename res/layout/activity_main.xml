@@ -1,52 +1,97 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.example.how_old.MainActivity" >
+    android:layout_height="wrap_content"
+    tools:context="com.example.how_old.MainActivity"
+    android:background="#6699CC" >
 
     <Button 
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="get"
-        android:layout_alignParentRight="true"
+        android:layout_width="match_parent"
+        android:layout_height="18dp"
         android:layout_alignParentBottom="true"
-        android:layout_marginRight="10dp"
-        android:id="@+id/btn_get"/>
-    <Button 
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="detect"
-        android:layout_toLeftOf="@id/btn_get"
-        android:layout_alignParentBottom="true"
-        android:layout_marginRight="10dp"
-        android:id="@+id/btn_detect"/>
+        android:background="#00000000"
+        android:id="@+id/blank"/>
     
     <TextView
         android:id="@+id/tv_tip"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignTop="@id/btn_detect"
-        android:layout_marginRight="15dp"
-        android:layout_toLeftOf="@id/btn_detect"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_alignParentTop="true"
+        android:background="#003366"
+        android:layout_centerHorizontal="true"
+        android:textSize="19sp"
+        android:typeface="serif"
         android:gravity="center"
-        android:text="click ==>" />
+        android:textColor="#ffffff"
+        android:text="请从相册选择一张照片或者拍照" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/blank"
+        android:layout_marginBottom="0dp"
+        android:id="@+id/linearlayout" >
+        
+        <Button 
+        android:layout_width="match_parent"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:text="相册"        
+        android:drawableTop="@drawable/pikephoto_ic"
+        android:background="#00000000"
+        android:textColor="#ffffff"
+        android:textSize="20sp"        
+        android:id="@+id/btn_get"/>
     
-    <ImageView 
+    <Button 
+        android:layout_width="match_parent"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:text="拍照"
+        android:drawableTop="@drawable/takephoto_ic"
+        
+        android:background="#00000000"
+        android:textColor="#ffffff"
+        android:textSize="20sp"        
+        android:id="@+id/btn_takephoto"/>
+    
+    <Button 
+        android:layout_width="match_parent"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:text="识别"
+        android:drawableTop="@drawable/detect_ic"
+        
+		android:textSize="20sp"		
+        android:textColor="#ffffff"
+        android:background="#00000000"       
+        android:id="@+id/btn_detect"/>   
+    
+    <Button 
+        android:layout_width="match_parent"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"        
+        android:drawableTop="@drawable/more_ic"
+        android:background="#00000000"
+        android:textColor="#ffffff"
+        android:textSize="20sp"
+        android:text="more"
+        android:id="@+id/btn_more" />
+        
+    </LinearLayout>
+        
+    <ImageView
+        android:id="@+id/photo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/photo"
-        android:layout_above="@id/btn_detect"
+        android:layout_above="@id/linearlayout"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
-        android:src="@drawable/test"
+        android:layout_marginBottom="10dp"
+        android:layout_below="@id/tv_tip"
+        android:layout_marginTop="10dp"
+        android:src="@drawable/test" 
         />
-   
+    
     <FrameLayout 
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -62,11 +107,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/id_age_and_gender"
-            android:drawableLeft="@drawable/male"
             android:background="@drawable/hint"
             android:visibility="invisible"
-            android:textColor="#436EEE"
-            android:text="123"
+            android:textColor="#ffffff"
+            android:text="123456"
             android:textSize="22sp"
             android:gravity="center"/>
     </FrameLayout>

@@ -33,7 +33,7 @@ public class FaceppDetect {
 					PostParameters params = new PostParameters();
 					params.setImg(array);
 					JSONObject jsonObject = requests.detectionDetect(params);
-					Log.e("TAG",jsonObject.toString());
+					//Log.e("TAG",jsonObject.toString());
 					//Log.e("TAG","++++++++++++++++++++++++++++++++++");
 					if(callBack!= null){
 						callBack.success(jsonObject);
